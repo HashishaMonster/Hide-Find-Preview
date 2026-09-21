@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hide and Find — Sprint Previews</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #0f0f0f; color: #fff; padding: 40px 24px 80px; }
+  h1 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .subtitle { font-size: 13px; color: #666; margin-bottom: 48px; }
+  .section { margin-bottom: 64px; }
+  .section-label { font-size: 11px; font-weight: 700; color: #f5a623; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+  .section-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 24px; }
+  .phones-row { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; }
+  .phone-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 12px; color: #666; text-align: center; max-width: 180px; }
+
+  /* PHONE FRAME */
+  .phone {
+    width: 200px; height: 380px;
+    border-radius: 28px;
+    border: 3px solid #333;
+    background: #1a1a2e;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 60px #000a;
+    flex-shrink: 0;
+  }
+
+  /* ── SHARED COMPONENTS ── */
+  .topbar {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 44px; background: #16213e;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 14px; border-bottom: 1px solid #2a2a4a;
+  }
+  .topbar-title { font-size: 13px; font-weight: 700; color: #fff; }
+  .coin-pill {
+    display: flex; align-items: center; gap: 4px;
+    background: #2a2a4a; border-radius: 12px;
+    padding: 3px 8px; font-size: 11px; font-weight: 700; color: #f5a623;
+  }
+  .coin-dot { width: 8px; height: 8px; background: #f5a623; border-radius: 50%; }
+  .back-btn {
+    width: 24px; height: 24px; background: #2a2a4a;
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #aaa;
+  }
+
+  /* ── SPRINT 1 — CONTROLS ── */
+  .ctrl-bg { position: absolute; inset: 0; background: linear-gradient(160deg, #0d1b2a, #1a3a4a); }
+  .ctrl-scene { position: absolute; top: 44px; left: 0; right: 0; bottom: 60px; display: flex; align-items: center; justify-content: center; }
+  .ctrl-scene-txt { font-size: 10px; color: #aaa; text-align: center; }
+  .joystick-base {
+    position: absolute; bottom: 14px;
+    width: 52px; height: 52px; border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .joystick-base.left { left: 18px; }
+  .joystick-base.right { right: 18px; }
+  .joystick-knob {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    border: 2px solid rgba(255,255,255,0.5);
+  }
+  .ctrl-label-left { position: absolute; bottom: 72px; left: 22px; font-size: 8px; color: #aaa; }
+  .ctrl-label-right { position: absolute; bottom: 72px; right: 10px; font-size: 8px; color: #aaa; }
+  .ctrl-crosshair {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 16px; height: 16px;
+  }
+  .ctrl-crosshair::before, .ctrl-crosshair::after {
+    content: ''; position: absolute; background: rgba(255,255,255,0.3);
+  }
+  .ctrl-crosshair::before { width: 100%; height: 1px; top: 50%; left: 0; }
+  .ctrl-crosshair::after { width: 1px; height: 100%; left: 50%; top: 0; }
+
+  /* ── SPRINT 2 — MAIN MENU ── */
+  .menu-bg { position: absolute; inset: 0; background: linear-gradient(180deg, #1a1a3e 0%, #0d0d1f 100%); }
+  .menu-logo { position: absolute; top: 60px; left: 0; right: 0; text-align: center; }
+  .menu-logo-title { font-size: 16px; font-weight: 800; color: #f5a623; }
+  .menu-logo-sub { font-size: 9px; color: #aaa; margin-top: 2px; }
+  .menu-avatar { position: absolute; top: 105px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; background: #2a2a5a; border-radius: 50%; border: 2px solid #f5a623; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .menu-coins { position: absolute; top: 152px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; color: #f5a623; }
+  .menu-buttons { position: absolute; top: 176px; left: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .menu-btn {
+    height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+  }
+  .menu-btn.primary { background: #f5a623; color: #000; }
+  .menu-btn.secondary { background: #2a2a4a; color: #fff; border: 1px solid #3a3a6a; }
+  .menu-btn.disabled { background: #1a1a3a; color: #444; border: 1px solid #2a2a4a; position: relative; }
+  .coming-soon { position: absolute; right: 8px; font-size: 7px; color: #f5a623; background: #2a1a00; padding: 1px 4px; border-radius: 4px; }
+  .menu-bottom { position: absolute; bottom: 12px; left: 16px; right: 16px; display: flex; gap: 8px; }
+  .menu-bottom-btn { flex: 1; height: 28px; background: #2a2a4a; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #aaa; border: 1px solid #3a3a6a; }
+
+  /* ── SPRINT 3 — VICTORY SCREEN ── */
+  .victory-bg { position: absolute; inset: 0; background: linear-gradient(180deg, #1a2a1a 0%, #0d1a0d 100%); }
+  .victory-title { position: absolute; top: 52px; left: 0; right: 0; text-align: center; font-size: 14px; font-weight: 800; color: #f5a623; }
+  .victory-subtitle { position: absolute; top: 70px; left: 0; right: 0; text-align: center; font-size: 9px; color: #aaa; }
+  .victory-stage { position: absolute; top: 88px; left: 16px; right: 16px; height: 150px; display: flex; align-items: flex-end; justify-content: center; gap: 12px; }
+  .victory-player { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .victory-avatar { width: 48px; height: 48px; border-radius: 50%; background: #2a2a5a; border: 2px solid #f5a623; display: flex; align-items: center; justify-content: center; font-size: 22px; position: relative; }
+  .victory-avatar.loser { border-color: #555; opacity: 0.7; }
+  .crown { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); font-size: 14px; }
+  .victory-name { font-size: 8px; color: #fff; font-weight: 600; }
+  .victory-tag { font-size: 7px; padding: 1px 5px; border-radius: 4px; }
+  .victory-tag.win { background: #f5a623; color: #000; }
+  .victory-tag.lose { background: #333; color: #aaa; }
+  .emote-bubble { position: absolute; top: -28px; right: -8px; background: #2a2a4a; border-radius: 8px; padding: 2px 5px; font-size: 10px; }
+  .victory-rewards { position: absolute; top: 248px; left: 16px; right: 16px; background: #2a2a4a; border-radius: 10px; padding: 10px 12px; }
+  .victory-rewards-title { font-size: 8px; color: #aaa; margin-bottom: 6px; }
+  .victory-reward-row { display: flex; justify-content: space-between; align-items: center; }
+  .victory-reward-label { font-size: 10px; color: #fff; }
+  .victory-reward-val { font-size: 10px; font-weight: 700; color: #f5a623; }
+  .victory-continue { position: absolute; bottom: 14px; left: 16px; right: 16px; height: 32px; background: #f5a623; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #000; }
+
+  /* ── SPRINT 4 — SHOP ── */
+  .shop-bg { position: absolute; inset: 0; background: #1a1a2e; }
+  .shop-tabs { position: absolute; top: 44px; left: 0; right: 0; display: flex; gap: 4px; padding: 8px 10px; background: #16213e; border-bottom: 1px solid #2a2a4a; }
+  .shop-tab { flex: 1; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 600; }
+  .shop-tab.active { background: #f5a623; color: #000; }
+  .shop-tab.inactive { background: #2a2a4a; color: #aaa; }
+  .shop-section-title { position: absolute; top: 104px; left: 12px; font-size: 11px; font-weight: 700; color: #fff; }
+  .shop-section-sub { position: absolute; top: 118px; left: 12px; font-size: 8px; color: #666; }
+  .shop-grid { position: absolute; top: 132px; left: 10px; right: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .shop-card { background: #2a2a4a; border-radius: 10px; padding: 8px; border: 1.5px solid transparent; }
+  .shop-card.selected { border-color: #f5a623; }
+  .shop-card-img { width: 100%; aspect-ratio: 1; background: #3a3a6a; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 4px; }
+  .shop-card-name { font-size: 8px; font-weight: 600; color: #fff; }
+  .shop-card-price { display: flex; align-items: center; gap: 2px; font-size: 8px; color: #f5a623; margin-top: 2px; }
+  .shop-buy-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 48px; background: #16213e; border-top: 1px solid #2a2a4a; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; }
+  .shop-buy-info { }
+  .shop-buy-name { font-size: 10px; font-weight: 700; color: #fff; }
+  .shop-buy-sub { font-size: 8px; color: #666; }
+  .shop-buy-btn { background: #f5a623; color: #000; font-size: 9px; font-weight: 700; padding: 6px 10px; border-radius: 8px; display: flex; align-items: center; gap: 3px; }
+
+  /* Remove Ads tab */
+  .remove-ads-card { position: absolute; top: 132px; left: 10px; right: 10px; background: #2a2a4a; border-radius: 12px; padding: 16px 14px; text-align: center; }
+  .remove-ads-icon { font-size: 28px; margin-bottom: 8px; }
+  .remove-ads-title { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .remove-ads-desc { font-size: 8px; color: #aaa; line-height: 1.5; margin-bottom: 12px; }
+  .remove-ads-btn { background: #f5a623; color: #000; font-size: 10px; font-weight: 700; padding: 8px 16px; border-radius: 8px; display: inline-block; }
+
+  /* ── SPRINT 5 — DAILY LOGIN ── */
+  .login-bg { position: absolute; inset: 0; background: #1a1a2e; }
+  .login-streak { position: absolute; top: 52px; left: 0; right: 0; text-align: center; }
+  .login-streak-num { font-size: 20px; font-weight: 800; color: #f5a623; }
+  .login-streak-label { font-size: 8px; color: #aaa; }
+  .login-calendar { position: absolute; top: 96px; left: 10px; right: 10px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-day { aspect-ratio: 1; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 6px; gap: 1px; }
+  .cal-day.done { background: #2a4a2a; border: 1px solid #3a8a3a; }
+  .cal-day.current { background: #4a3a00; border: 1.5px solid #f5a623; }
+  .cal-day.upcoming { background: #2a2a4a; border: 1px solid #3a3a6a; }
+  .cal-day-num { font-size: 7px; font-weight: 700; }
+  .cal-day.done .cal-day-num { color: #4a8a4a; }
+  .cal-day.current .cal-day-num { color: #f5a623; }
+  .cal-day.upcoming .cal-day-num { color: #666; }
+  .cal-day-reward { font-size: 5px; color: #aaa; }
+  .cal-day.done .cal-day-reward { color: #3a6a3a; }
+  .cal-day.current .cal-day-reward { color: #c8860f; }
+  .login-today { position: absolute; top: 248px; left: 10px; right: 10px; background: #2a2a4a; border-radius: 10px; padding: 10px 12px; }
+  .login-today-label { font-size: 8px; color: #aaa; margin-bottom: 4px; }
+  .login-today-reward { font-size: 13px; font-weight: 700; color: #f5a623; }
+  .login-claim-btn { position: absolute; bottom: 60px; left: 16px; right: 16px; height: 32px; background: #f5a623; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #000; }
+  .login-ad-btn { position: absolute; bottom: 20px; left: 16px; right: 16px; height: 28px; background: #2a2a4a; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #aaa; gap: 4px; border: 1px solid #3a3a6a; }
+
+  /* ── SPRINT 6 — DAILY REWARDS ── */
+  .rewards-bg { position: absolute; inset: 0; background: #1a1a2e; }
+  .rewards-header { position: absolute; top: 52px; left: 0; right: 0; text-align: center; }
+  .rewards-header-title { font-size: 13px; font-weight: 700; color: #fff; }
+  .rewards-header-sub { font-size: 8px; color: #aaa; margin-top: 2px; }
+  .rewards-slots { position: absolute; top: 100px; left: 10px; right: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .rewards-slot { background: #2a2a4a; border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #3a3a6a; }
+  .rewards-slot.free { border-color: #4a6a2a; background: #2a3a1a; }
+  .rewards-slot-left { display: flex; flex-direction: column; gap: 2px; }
+  .rewards-slot-label { font-size: 9px; font-weight: 600; color: #fff; }
+  .rewards-slot-sub { font-size: 7px; color: #aaa; }
+  .rewards-slot-badge { font-size: 7px; background: #4a6a2a; color: #8aca4a; padding: 1px 5px; border-radius: 4px; width: fit-content; }
+  .rewards-slot-btn { font-size: 8px; font-weight: 700; padding: 5px 10px; border-radius: 7px; }
+  .rewards-slot-btn.claim { background: #f5a623; color: #000; }
+  .rewards-slot-btn.ad { background: #2a3a4a; color: #6ab4f5; border: 1px solid #3a5a7a; }
+  .rewards-slot-btn.used { background: #1a1a3a; color: #444; }
+  .rewards-reset { position: absolute; bottom: 14px; left: 0; right: 0; text-align: center; font-size: 8px; color: #555; }
+</style>
+</head>
+<body>
+
+<h1>Hide and Find — Sprint Screen Previews</h1>
+<p class="subtitle">Visual references for developers. All numbers reflect locked design values.</p>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SPRINT 1 — CONTROLS -->
+<!-- ══════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Sprint 1</div>
+  <div class="section-title">Controls — Dual Joystick Layout</div>
+  <div class="phones-row">
+
+    <div class="phone-col">
+      <div class="phone-label">In-game view — both joysticks visible</div>
+      <div class="phone">
+        <div class="ctrl-bg"></div>
+        <div class="ctrl-scene">
+          <div class="ctrl-crosshair"></div>
+          <div class="ctrl-scene-txt">First person view<br><span style="font-size:8px;color:#555">Game world renders here</span></div>
+        </div>
+        <div class="ctrl-label-left" style="font-size:7px;color:#777">Move</div>
+        <div class="ctrl-label-right" style="font-size:7px;color:#777">Look</div>
+        <div class="joystick-base left">
+          <div class="joystick-knob"></div>
+        </div>
+        <div class="joystick-base right">
+          <div class="joystick-knob"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone-col">
+      <div class="phone-label">Left joystick repositions to press point</div>
+      <div class="phone">
+        <div class="ctrl-bg"></div>
+        <div class="ctrl-scene">
+          <div class="ctrl-crosshair"></div>
+        </div>
+        <!-- repositioned left joystick -->
+        <div class="joystick-base" style="bottom:80px;left:30px;">
+          <div class="joystick-knob"></div>
+        </div>
+        <div style="position:absolute;bottom:130px;left:34px;font-size:7px;color:#f5a623;">Pressed here</div>
+        <div class="joystick-base right">
+          <div class="joystick-knob"></div>
+        </div>
+        <div class="ctrl-label-right" style="font-size:7px;color:#777">Look</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SPRINT 2 — MAIN MENU -->
+<!-- ══════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Sprint 2</div>
+  <div class="section-title">Main Menu</div>
+  <div class="phones-row">
+
+    <div class="phone-col">
+      <div class="phone-label">Default state — new player, 100 coins</div>
+      <div class="phone">
+        <div class="menu-bg"></div>
+        <div class="menu-logo">
+          <div class="menu-logo-title">HIDE & FIND</div>
+          <div class="menu-logo-sub">Hide it. Find it. Win.</div>
+        </div>
+        <div class="menu-avatar">🙂</div>
+        <div class="menu-coins">
+          <div class="coin-dot"></div>
+          100 Coins
+        </div>
+        <div class="menu-buttons">
+          <div class="menu-btn primary">▶ Play vs AI</div>
+          <div class="menu-btn disabled">👥 Play vs Human <span class="coming-soon">Coming Soon</span></div>
+          <div class="menu-btn secondary">🛍 Shop</div>
+          <div class="menu-btn secondary">📅 Daily Login Bonus</div>
+          <div class="menu-btn secondary">🎁 Daily Rewards</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone-col">
+      <div class="phone-label">Returning player — 450 coins, streak active</div>
+      <div class="phone">
+        <div class="menu-bg"></div>
+        <div class="menu-logo">
+          <div class="menu-logo-title">HIDE & FIND</div>
+          <div class="menu-logo-sub">Hide it. Find it. Win.</div>
+        </div>
+        <div class="menu-avatar">😎</div>
+        <div class="menu-coins">
+          <div class="coin-dot"></div>
+          450 Coins
+        </div>
+        <div class="menu-buttons">
+          <div class="menu-btn primary">▶ Play vs AI</div>
+          <div class="menu-btn disabled">👥 Play vs Human <span class="coming-soon">Coming Soon</span></div>
+          <div class="menu-btn secondary">🛍 Shop</div>
+          <div class="menu-btn secondary" style="position:relative;">📅 Daily Login Bonus <span style="position:absolute;right:8px;font-size:7px;background:#f5a623;color:#000;padding:1px 5px;border-radius:4px;">Day 3</span></div>
+          <div class="menu-btn secondary" style="position:relative;">🎁 Daily Rewards <span style="position:absolute;right:8px;font-size:7px;background:#3a6a3a;color:#8aca4a;padding:1px 5px;border-radius:4px;">Free!</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SPRINT 3 — VICTORY SCREEN -->
+<!-- ══════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Sprint 3</div>
+  <div class="section-title">Victory Screen</div>
+  <div class="phones-row">
+
+    <div class="phone-col">
+      <div class="phone-label">Player wins — +30 coins</div>
+      <div class="phone">
+        <div class="victory-bg"></div>
+        <div class="victory-title">Victory!</div>
+        <div class="victory-subtitle">You found the hidden item first</div>
+        <div class="victory-stage">
+          <div class="victory-player">
+            <div class="victory-avatar" style="position:relative;">
+              😎
+              <div class="crown">👑</div>
+              <div class="emote-bubble">🎉</div>
+            </div>
+            <div class="victory-name">You</div>
+            <div class="victory-tag win">Winner</div>
+          </div>
+          <div style="font-size:16px;color:#555;padding-bottom:16px;">vs</div>
+          <div class="victory-player">
+            <div class="victory-avatar loser">🤖</div>
+            <div class="victory-name" style="color:#666;">AI</div>
+            <div class="victory-tag lose">Defeated</div>
+          </div>
+        </div>
+        <div class="victory-rewards">
+          <div class="victory-rewards-title">Rewards earned</div>
+          <div class="victory-reward-row">
+            <div class="victory-reward-label">Match reward</div>
+            <div class="victory-reward-val">+30 Coins</div>
+          </div>
+        </div>
+        <div class="victory-continue">Continue</div>
+      </div>
+    </div>
+
+    <div class="phone-col">
+      <div class="phone-label">Player loses — 0 coins</div>
+      <div class="phone">
+        <div class="victory-bg" style="background:linear-gradient(180deg,#2a1a1a,#0d0808);"></div>
+        <div class="victory-title" style="color:#e05a5a;">Defeated</div>
+        <div class="victory-subtitle">The item was found before you</div>
+        <div class="victory-stage">
+          <div class="victory-player">
+            <div class="victory-avatar loser">😞</div>
+            <div class="victory-name" style="color:#666;">You</div>
+            <div class="victory-tag lose">Defeated</div>
+          </div>
+          <div style="font-size:16px;color:#555;padding-bottom:16px;">vs</div>
+          <div class="victory-player">
+            <div class="victory-avatar" style="position:relative;border-color:#e05a5a;">
+              🤖
+              <div class="crown">👑</div>
+              <div class="emote-bubble">🎊</div>
+            </div>
+            <div class="victory-name">AI</div>
+            <div class="victory-tag" style="background:#5a1a1a;color:#e05a5a;">Winner</div>
+          </div>
+        </div>
+        <div class="victory-rewards">
+          <div class="victory-rewards-title">Rewards earned</div>
+          <div class="victory-reward-row">
+            <div class="victory-reward-label">Match reward</div>
+            <div class="victory-reward-val" style="color:#666;">+0 Coins</div>
+          </div>
+        </div>
+        <div class="victory-continue" style="background:#2a2a4a;color:#aaa;">Continue</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SPRINT 4 — SHOP -->
+<!-- ══════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Sprint 4</div>
+  <div class="section-title">Shop — 3 tabs (Avatars, Emotes, Remove Ads)</div>
+  <div class="phones-row">
+
+    <!-- AVATARS TAB -->
+    <div class="phone-col">
+      <div class="phone-label">Avatars tab — 300 coins each</div>
+      <div class="phone">
+        <div class="shop-bg"></div>
+        <div class="topbar">
+          <div class="back-btn">←</div>
+          <div class="topbar-title">Shop</div>
+          <div class="coin-pill"><div class="coin-dot"></div>450</div>
+        </div>
+        <div class="shop-tabs">
+          <div class="shop-tab active">Avatars</div>
+          <div class="shop-tab inactive">Emotes</div>
+          <div class="shop-tab inactive">No Ads</div>
+        </div>
+        <div class="shop-section-title">Character avatars</div>
+        <div class="shop-section-sub">Pick who you hide and seek as</div>
+        <div class="shop-grid">
+          <div class="shop-card selected">
+            <div class="shop-card-img">🙂</div>
+            <div class="shop-card-name">Default</div>
+            <div class="shop-card-price"><div class="coin-dot" style="width:6px;height:6px;"></div> Owned</div>
+          </div>
+          <div class="shop-card">
+            <div class="shop-card-img">😎</div>
+            <div class="shop-card-name">Avatar 2</div>
+            <div class="shop-card-price"><div class="coin-dot" style="width:6px;height:6px;"></div> 300</div>
+          </div>
+          <div class="shop-card">
+            <div class="shop-card-img">🤠</div>
+            <div class="shop-card-name">Avatar 3</div>
+            <div class="shop-card-price"><div class="coin-dot" style="width:6px;height:6px;"></div> 300</div>
+          </div>
+          <div class="shop-card">
+            <div class="shop-card-img">🥷</div>
+            <div class="shop-card-name">Avatar 4</div>
+            <div class="shop-card-price"><div class="coin-dot" style="width:6px;height:6px;"></div> 300</div>
+          </div>
+        </div>
+        <div class="shop-buy-bar">
+          <div class="shop-buy-info">
+            <div class="shop-buy-name">Default Avatar</div>
+            <div class="shop-buy-sub">Character avatar</div>
+          </div>
+          <div class="shop-buy-btn" style="background:#3a3a6a;color:#aaa;">Selected</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EMOTES TAB -->
+    <div class="phone-col">
+      <div class="phone-label">Emotes tab — 150 coins each</div>
+      <div class="phone">
+        <div class="shop-bg"></div>
+        <div class="topbar">
+          <div class="back-btn">←</div>
+          <div class="topbar-title">Shop</div>
+          <div class="coin-pill"><div class="coin-dot"></div>450</div>
+        </div>
+        <div class="shop-tabs">
+          <div class="shop-tab inactive">Avatars</div>
+          <div class="shop-tab active">Emotes</div>
+          <div class="shop-tab inactive">No Ads</div>
+        </div>
+        <div class="shop-section-title">Victory emotes</div>
+        <div class="shop-section-sub">Play it when you win a round</div>
+        <div class="shop-grid">
+          <div class="shop-card selected">
+            <div class="shop-card-img">🎉</div>
+            <div class="shop-card-name">Default</div>
+            <div class="shop-card-price"><div class="coin-dot" style="width:6px;height:6px;"></div> Owned</div>
+          </div>
+          <div class="shop-card">
+            <div class="shop-card-img">💃</div>
+            <div class="shop-card-name">Emote 2</div>
+            <div class="shop-card-price"><div class="coin-dot" style="width:6px;height:6px;"></div> 150</div>
+          </div>
+          <div class="shop-card">
+            <div class="shop-card-img">🕺</div>
+            <div class="shop-card-name">Emote 3</div>
+            <div class="shop-card-price"><div class="coin-dot" style="width:6px;height:6px;"></div> 150</div>
+          </div>
+          <div class="shop-card">
+            <div class="shop-card-img">🏆</div>
+            <div class="shop-card-name">Emote 4</div>
+            <div class="shop-card-price"><div class="coin-dot" style="width:6px;height:6px;"></div> 150</div>
+          </div>
+        </div>
+        <div class="shop-buy-bar">
+          <div class="shop-buy-info">
+            <div class="shop-buy-name">Default Emote</div>
+            <div class="shop-buy-sub">Victory emote animation</div>
+          </div>
+          <div class="shop-buy-btn" style="background:#3a3a6a;color:#aaa;">Selected</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REMOVE ADS TAB -->
+    <div class="phone-col">
+      <div class="phone-label">Remove Ads tab — $4.99 one-time</div>
+      <div class="phone">
+        <div class="shop-bg"></div>
+        <div class="topbar">
+          <div class="back-btn">←</div>
+          <div class="topbar-title">Shop</div>
+          <div class="coin-pill"><div class="coin-dot"></div>450</div>
+        </div>
+        <div class="shop-tabs">
+          <div class="shop-tab inactive">Avatars</div>
+          <div class="shop-tab inactive">Emotes</div>
+          <div class="shop-tab active">No Ads</div>
+        </div>
+        <div class="remove-ads-card">
+          <div class="remove-ads-icon">🚫</div>
+          <div class="remove-ads-title">Remove All Ads</div>
+          <div class="remove-ads-desc">Permanently removes all interstitial ads. Rewarded ads remain available — you can still choose to watch them for bonus coins.</div>
+          <div class="remove-ads-btn">Buy — $4.99</div>
+        </div>
+        <div style="position:absolute;bottom:14px;left:12px;right:12px;font-size:8px;color:#555;text-align:center;">One-time purchase · Persists across reinstalls</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SPRINT 5 — DAILY LOGIN -->
+<!-- ══════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Sprint 5</div>
+  <div class="section-title">Daily Login Bonus</div>
+  <div class="phones-row">
+
+    <div class="phone-col">
+      <div class="phone-label">Day 3 of streak — ready to claim</div>
+      <div class="phone">
+        <div class="login-bg"></div>
+        <div class="topbar">
+          <div class="back-btn">←</div>
+          <div class="topbar-title">Daily Login</div>
+          <div class="coin-pill"><div class="coin-dot"></div>450</div>
+        </div>
+        <div class="login-streak">
+          <div class="login-streak-num">🔥 3</div>
+          <div class="login-streak-label">Day streak</div>
+        </div>
+        <div class="login-calendar">
+          <div class="cal-day done"><div class="cal-day-num">1</div><div class="cal-day-reward">20c</div></div>
+          <div class="cal-day done"><div class="cal-day-num">2</div><div class="cal-day-reward">30c</div></div>
+          <div class="cal-day current"><div class="cal-day-num">3</div><div class="cal-day-reward">50c</div></div>
+          <div class="cal-day upcoming"><div class="cal-day-num">4</div><div class="cal-day-reward">75c</div></div>
+          <div class="cal-day upcoming"><div class="cal-day-num">5</div><div class="cal-day-reward">100c</div></div>
+          <div class="cal-day upcoming"><div class="cal-day-num">6</div><div class="cal-day-reward">150c</div></div>
+          <div class="cal-day upcoming"><div class="cal-day-num">7</div><div class="cal-day-reward">300c+</div></div>
+        </div>
+        <div class="login-today">
+          <div class="login-today-label">Today's reward — Day 3</div>
+          <div class="login-today-reward">50 Coins</div>
+        </div>
+        <div class="login-claim-btn">Claim 50 Coins</div>
+        <div class="login-ad-btn">▶ Watch Ad to protect streak</div>
+      </div>
+    </div>
+
+    <div class="phone-col">
+      <div class="phone-label">Missed a day — streak continuation offer</div>
+      <div class="phone">
+        <div class="login-bg"></div>
+        <div class="topbar">
+          <div class="back-btn">←</div>
+          <div class="topbar-title">Daily Login</div>
+          <div class="coin-pill"><div class="coin-dot"></div>450</div>
+        </div>
+        <div style="position:absolute;top:52px;left:0;right:0;text-align:center;">
+          <div style="font-size:28px;">😟</div>
+          <div style="font-size:12px;font-weight:700;color:#e05a5a;margin-top:4px;">Streak at risk!</div>
+          <div style="font-size:8px;color:#aaa;margin-top:3px;">You missed a day. Your 3-day<br>streak will be lost.</div>
+        </div>
+        <div style="position:absolute;top:156px;left:10px;right:10px;background:#2a2a4a;border-radius:10px;padding:10px 12px;">
+          <div style="font-size:8px;color:#aaa;margin-bottom:4px;">Your streak before miss</div>
+          <div style="font-size:13px;font-weight:700;color:#f5a623;">🔥 Day 3</div>
+          <div style="font-size:7px;color:#666;margin-top:2px;">Watch an ad to continue at Day 4</div>
+        </div>
+        <div style="position:absolute;bottom:60px;left:16px;right:16px;height:36px;background:#f5a623;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#000;">▶ Watch Ad — Continue at Day 4</div>
+        <div style="position:absolute;bottom:22px;left:16px;right:16px;height:28px;background:#2a1a1a;border:1px solid #4a2a2a;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#e05a5a;">No thanks — reset to Day 1</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SPRINT 6 — DAILY REWARDS -->
+<!-- ══════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Sprint 6</div>
+  <div class="section-title">Daily Rewards</div>
+  <div class="phones-row">
+
+    <div class="phone-col">
+      <div class="phone-label">First claim free — 3 ad claims remaining</div>
+      <div class="phone">
+        <div class="rewards-bg"></div>
+        <div class="topbar">
+          <div class="back-btn">←</div>
+          <div class="topbar-title">Daily Rewards</div>
+          <div class="coin-pill"><div class="coin-dot"></div>450</div>
+        </div>
+        <div class="rewards-header">
+          <div class="rewards-header-title">Claim your daily coins</div>
+          <div class="rewards-header-sub">Free once · Watch ads for more · Resets midnight</div>
+        </div>
+        <div class="rewards-slots">
+          <div class="rewards-slot free">
+            <div class="rewards-slot-left">
+              <div class="rewards-slot-label">First claim</div>
+              <div class="rewards-slot-badge">FREE</div>
+            </div>
+            <div class="rewards-slot-btn claim">Claim<br><span style="font-size:7px;">20–40 coins</span></div>
+          </div>
+          <div class="rewards-slot">
+            <div class="rewards-slot-left">
+              <div class="rewards-slot-label">2nd claim</div>
+              <div class="rewards-slot-sub">Watch an ad</div>
+            </div>
+            <div class="rewards-slot-btn ad">▶ Watch Ad</div>
+          </div>
+          <div class="rewards-slot">
+            <div class="rewards-slot-left">
+              <div class="rewards-slot-label">3rd claim</div>
+              <div class="rewards-slot-sub">Watch an ad</div>
+            </div>
+            <div class="rewards-slot-btn ad">▶ Watch Ad</div>
+          </div>
+          <div class="rewards-slot">
+            <div class="rewards-slot-left">
+              <div class="rewards-slot-label">4th claim</div>
+              <div class="rewards-slot-sub">Watch an ad</div>
+            </div>
+            <div class="rewards-slot-btn ad">▶ Watch Ad</div>
+          </div>
+        </div>
+        <div class="rewards-reset">Resets at midnight</div>
+      </div>
+    </div>
+
+    <div class="phone-col">
+      <div class="phone-label">All 4 claims used — countdown to reset</div>
+      <div class="phone">
+        <div class="rewards-bg"></div>
+        <div class="topbar">
+          <div class="back-btn">←</div>
+          <div class="topbar-title">Daily Rewards</div>
+          <div class="coin-pill"><div class="coin-dot"></div>556</div>
+        </div>
+        <div class="rewards-header">
+          <div class="rewards-header-title">All claims used!</div>
+          <div class="rewards-header-sub">Come back tomorrow for more coins</div>
+        </div>
+        <div class="rewards-slots">
+          <div class="rewards-slot" style="border-color:#2a4a2a;background:#1a2a1a;">
+            <div class="rewards-slot-left">
+              <div class="rewards-slot-label">1st claim</div>
+              <div style="font-size:7px;color:#3a6a3a;">✓ Claimed +32 coins</div>
+            </div>
+            <div class="rewards-slot-btn used">Done</div>
+          </div>
+          <div class="rewards-slot" style="border-color:#2a4a2a;background:#1a2a1a;">
+            <div class="rewards-slot-left">
+              <div class="rewards-slot-label">2nd claim</div>
+              <div style="font-size:7px;color:#3a6a3a;">✓ Claimed +27 coins</div>
+            </div>
+            <div class="rewards-slot-btn used">Done</div>
+          </div>
+          <div class="rewards-slot" style="border-color:#2a4a2a;background:#1a2a1a;">
+            <div class="rewards-slot-left">
+              <div class="rewards-slot-label">3rd claim</div>
+              <div style="font-size:7px;color:#3a6a3a;">✓ Claimed +38 coins</div>
+            </div>
+            <div class="rewards-slot-btn used">Done</div>
+          </div>
+          <div class="rewards-slot" style="border-color:#2a4a2a;background:#1a2a1a;">
+            <div class="rewards-slot-left">
+              <div class="rewards-slot-label">4th claim</div>
+              <div style="font-size:7px;color:#3a6a3a;">✓ Claimed +21 coins</div>
+            </div>
+            <div class="rewards-slot-btn used">Done</div>
+          </div>
+        </div>
+        <div style="position:absolute;bottom:14px;left:0;right:0;text-align:center;">
+          <div style="font-size:9px;color:#f5a623;">Resets in 06:42:18</div>
+          <div style="font-size:7px;color:#555;margin-top:2px;">Total earned today: +118 coins</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
